@@ -1,0 +1,1112 @@
+<!-- 
+  This project aims to solve the problem of rapid and accessible anemia detection using computer vision.
+  By allowing users to upload images of fingernails, palm/finger, and conjunctiva, the system analyses key visual features for signs of anemia,
+  and employs a machine learning model to provide a preliminary diagnostic suggestion, thereby helping with early screening where traditional laboratory methods may not be easily available.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>AnemAI — Anemia Detection System</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+/* ── MEDICAL THEME COLORS ── */
+:root {
+  --navy:       #0a2342;
+  --navy-mid:   #0d2f5e;
+  --navy-light: #1a4480;
+  --teal:       #0b7285;
+  --teal-light: #0c8fa3;
+  --teal-pale:  #e0f7fa;
+  --bg:         #f0f4f8;
+  --bg2:        #e8eef5;
+  --white:      #ffffff;
+  --border:     #ccd6e0;
+  --text:       #1a2e45;
+  --text2:      #4a6080;
+  --text3:      #8a9db5;
+  --green:      #0f7b4d;
+  --green-bg:   #e6f7f0;
+  --green-bdr:  #a3d9bf;
+  --orange:     #b45309;
+  --orange-bg:  #fef3cd;
+  --orange-bdr: #f0c060;
+  --red:        #9b1c1c;
+  --red-bg:     #fde8e8;
+  --red-bdr:    #f8b4b4;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* ── HEADER ── */
+header {
+  background: var(--navy);
+  padding: 0 32px;
+  box-shadow: 0 2px 8px rgba(10,35,66,0.3);
+}
+.header-inner {
+  max-width: 1000px; margin: 0 auto;
+  display: flex; align-items: center; justify-content: space-between;
+  height: 62px;
+}
+.logo { display: flex; align-items: center; gap: 12px; }
+.logo-mark {
+  width: 36px; height: 36px;
+  background: linear-gradient(135deg, var(--teal), var(--teal-light));
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+}
+.logo-name { font-size: 16px; font-weight: 700; color: #fff; letter-spacing: -0.3px; }
+.logo-name span { color: var(--teal-light); font-weight: 400; }
+
+.header-nav { display: flex; align-items: center; gap: 20px; }
+.header-nav a {
+  font-size: 13px; color: rgba(255,255,255,0.65);
+  text-decoration: none; font-weight: 500;
+  transition: color 0.15s;
+}
+.header-nav a:hover { color: #fff; }
+.header-pill {
+  font-size: 11px; font-weight: 600;
+  background: rgba(11,114,133,0.3);
+  color: #7de8f5;
+  border: 1px solid rgba(11,114,133,0.5);
+  border-radius: 20px; padding: 3px 12px;
+  letter-spacing: 0.3px;
+}
+
+/* ── HERO BANNER ── */
+.hero {
+  background: linear-gradient(135deg, var(--navy) 0%, var(--navy-mid) 60%, var(--teal) 100%);
+  padding: 36px 32px 32px;
+  border-bottom: 3px solid var(--teal);
+}
+.hero-inner { max-width: 1000px; margin: 0 auto; }
+.hero h1 {
+  font-size: 22px; font-weight: 700; color: #fff;
+  margin-bottom: 6px; letter-spacing: -0.3px;
+}
+.hero p { font-size: 13px; color: rgba(255,255,255,0.7); max-width: 620px; line-height: 1.6; }
+.hero-badges { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+.hero-badge {
+  display: flex; align-items: center; gap: 6px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 20px; padding: 4px 12px;
+  font-size: 11px; color: rgba(255,255,255,0.8); font-weight: 500;
+}
+
+/* ── PAGE ── */
+.page { max-width: 1000px; margin: 0 auto; padding: 24px 20px 60px; animation: fadeInUp 0.6s ease-out; }
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── FORM ELEMENTS ── */
+.form-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 16px;
+}
+@media (max-width: 620px) { .form-grid { grid-template-columns: 1fr; } }
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+.form-group label { font-size: 11px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.5px; }
+.form-group input, .form-group select {
+  padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; font-family: 'Inter', sans-serif;
+  color: var(--text); outline: none; transition: border-color 0.2s, box-shadow 0.2s, transform 0.1s; background: #fff;
+}
+.form-group input:focus, .form-group select:focus { border-color: var(--teal); box-shadow: 0 0 0 3px rgba(11,114,133,0.2); transform: translateY(-1px); }
+
+/* ── CARD ── */
+.card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 22px 24px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 12px rgba(10,35,66,0.06);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  animation: fadeInUp 0.6s ease-out backwards;
+}
+.card:nth-child(2) { animation-delay: 0.1s; }
+.card:nth-child(3) { animation-delay: 0.2s; }
+.card:nth-child(4) { animation-delay: 0.3s; }
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(10,35,66,0.12);
+}
+
+.card-header {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 14px; font-weight: 700; color: var(--text);
+  padding-bottom: 14px; margin-bottom: 18px;
+  border-bottom: 2px solid var(--bg2);
+}
+.step-num {
+  width: 26px; height: 26px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--navy), var(--navy-mid)); color: #fff;
+  font-size: 12px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  box-shadow: 0 2px 4px rgba(10,35,66,0.3);
+}
+
+/* ── IMAGE SLOTS ── */
+.slots-grid {
+  display: grid; grid-template-columns: repeat(3,1fr);
+  gap: 14px; margin-bottom: 16px;
+}
+@media (max-width: 620px) { .slots-grid { grid-template-columns: 1fr; } }
+
+.slot {
+  border: 1px solid var(--border);
+  border-radius: 10px; overflow: hidden;
+  background: #fafcfe;
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s ease;
+}
+.slot:hover {
+  transform: translateY(-2px);
+}
+.slot.has-image {
+  border-color: var(--teal);
+  box-shadow: 0 0 0 2px rgba(11,114,133,0.15);
+}
+.slot-top {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 8px 12px;
+  background: var(--navy);
+  border-bottom: 1px solid var(--border);
+}
+.slot-label { font-size: 12px; font-weight: 600; color: #fff; }
+.slot-badge {
+  font-size: 10px; font-weight: 600;
+  padding: 2px 8px; border-radius: 10px;
+  background: rgba(255,255,255,0.15); color: rgba(255,255,255,0.7);
+  transition: all 0.3s;
+}
+.slot-badge.ready { background: rgba(11,114,133,0.8); color: #fff; box-shadow: 0 0 8px rgba(11,114,133,0.5); }
+
+.slot-type { padding: 8px 12px; border-bottom: 1px solid var(--border); background: var(--white); }
+.slot-type label {
+  font-size: 10px; font-weight: 600; color: var(--text3);
+  text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 4px;
+}
+.slot-type select {
+  width: 100%; padding: 6px 24px 6px 8px;
+  border: 1px solid var(--border); border-radius: 6px;
+  font-size: 12px; font-family: 'Inter', sans-serif; color: var(--text);
+  background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%234a6080' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 7px center;
+  appearance: none; cursor: pointer; outline: none;
+}
+.slot-type select:focus { border-color: var(--teal); box-shadow: 0 0 0 2px rgba(11,114,133,0.15); }
+
+.drop-zone {
+  min-height: 125px; padding: 16px 10px;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  text-align: center; cursor: pointer; position: relative;
+  background: #fafcfe; transition: background 0.3s, transform 0.2s;
+}
+.drop-zone:hover { background: var(--teal-pale); transform: scale(1.01); }
+.drop-zone.over  { background: #c8f0f7; }
+.drop-zone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+
+.dz-icon-wrap {
+  width: 44px; height: 44px; border-radius: 10px;
+  background: var(--bg2); border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; margin-bottom: 8px;
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.drop-zone:hover .dz-icon-wrap {
+  transform: scale(1.15) rotate(5deg);
+  background: #fff; border-color: var(--teal);
+}
+.dz-text { font-size: 12px; font-weight: 600; color: var(--navy); margin-bottom: 2px; }
+.dz-hint { font-size: 11px; color: var(--text3); }
+
+.preview-box { display: none; position: relative; }
+.preview-box img { width: 100%; height: 125px; object-fit: cover; display: block; }
+.preview-remove {
+  position: absolute; top: 6px; right: 6px;
+  width: 24px; height: 24px; border-radius: 50%;
+  background: rgba(10,35,66,0.8); color: #fff;
+  font-size: 12px; border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; z-index: 5;
+  transition: transform 0.2s, background 0.2s;
+}
+.preview-remove:hover { transform: scale(1.15); background: var(--red); }
+
+.slot-foot {
+  padding: 8px 12px; background: var(--bg2);
+  border-top: 1px solid var(--border);
+  font-size: 11px; color: var(--text3); font-weight: 500;
+  display: flex; align-items: center; gap: 6px;
+}
+.slot-foot-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--border); flex-shrink: 0; transition: background 0.3s;
+}
+.slot.has-image .slot-foot-dot { background: var(--teal); box-shadow: 0 0 5px var(--teal); }
+.slot.has-image .slot-foot { color: var(--teal); font-weight: 600; }
+
+.slot.has-image .drop-zone  { display: none; }
+.slot.has-image .preview-box { display: block; animation: fadeInUp 0.4s ease-out; }
+
+/* ── INFO BOX ── */
+.info-box {
+  background: linear-gradient(135deg, #f0f6fa, #e1f0fa); border: 1px solid #c5d9e8;
+  border-left: 4px solid var(--teal);
+  border-radius: 10px; padding: 14px 18px;
+  box-shadow: 0 2px 6px rgba(10,35,66,0.05);
+}
+.info-box h4 {
+  font-size: 13px; font-weight: 700; color: var(--navy);
+  margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px;
+}
+.info-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+@media (max-width: 480px) { .info-cols { grid-template-columns: 1fr; } }
+.info-item { font-size: 12px; color: var(--text2); display: flex; gap: 8px; line-height: 1.5; align-items: flex-start; }
+.info-item::before { content: '›'; color: var(--teal); font-size: 15px; flex-shrink: 0; font-weight: 800; margin-top: -3px; }
+
+/* ── BUTTONS ── */
+.action-row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.btn-primary {
+  background: linear-gradient(135deg, var(--teal) 0%, var(--teal-light) 100%);
+  color: #fff; border: none;
+  border-radius: 8px; padding: 12px 30px;
+  font-size: 14px; font-weight: 700; font-family: 'Inter', sans-serif;
+  cursor: pointer; display: inline-flex; align-items: center; gap: 8px;
+  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 0 4px 12px rgba(11,114,133,0.3);
+}
+.btn-primary:hover:not(:disabled) { transform: translateY(-3px) scale(1.02); box-shadow: 0 6px 16px rgba(11,114,133,0.4); }
+.btn-primary:active:not(:disabled) { transform: translateY(0) scale(0.98); }
+.btn-primary:disabled { background: #a0bdd0; cursor: not-allowed; box-shadow: none; }
+.spinner {
+  width: 14px; height: 14px;
+  border: 2px solid rgba(255,255,255,0.35);
+  border-top-color: #fff; border-radius: 50%;
+  animation: spin 0.7s linear infinite; display: none;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.btn-primary.loading .spinner { display: block; }
+.btn-primary.loading .btn-lbl { display: none; }
+.count-text { font-size: 13px; color: var(--text2); }
+.count-text strong { color: var(--text); }
+.btn-refresh {
+  border: none;
+  border-radius: 999px;
+  padding: 11px 22px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: 'Inter', sans-serif;
+  color: #fff;
+  background: linear-gradient(135deg, var(--navy-mid) 0%, var(--navy-light) 100%);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 3px 10px rgba(10,35,66,0.25);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+}
+.btn-refresh:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(10,35,66,0.3);
+  opacity: 0.95;
+}
+.btn-refresh:active {
+  transform: translateY(0);
+}
+
+.status-bar {
+  margin-top: 10px; padding: 9px 14px; border-radius: 7px;
+  font-size: 13px; display: none; align-items: center; gap: 8px;
+}
+.status-bar.info  { display: flex; background: #e0f7fa; border: 1px solid #a0d8e0; color: var(--teal); }
+.status-bar.error { display: flex; background: var(--red-bg); border: 1px solid var(--red-bdr); color: var(--red); }
+
+/* ── RESULTS ── */
+#results { display: none; }
+
+/* Overall banner */
+.result-banner {
+  display: flex; align-items: center; gap: 16px;
+  padding: 16px 20px; border-radius: 10px; margin-bottom: 20px;
+  border-left: 5px solid transparent;
+}
+.result-banner.non-anemia { background: var(--green-bg); border-color: var(--green); }
+.result-banner.anemia     { background: var(--red-bg);   border-color: var(--red); }
+
+.banner-icon {
+  width: 46px; height: 46px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; flex-shrink: 0;
+}
+.non-anemia .banner-icon { background: var(--green-bdr); }
+.anemia     .banner-icon { background: var(--red-bdr); }
+
+.banner-text h3 { font-size: 15px; font-weight: 700; margin-bottom: 3px; }
+.non-anemia h3  { color: var(--green); }
+.anemia h3      { color: var(--red); }
+.banner-text p  { font-size: 12px; color: var(--text2); }
+
+.banner-meta { margin-left: auto; text-align: right; flex-shrink: 0; }
+.banner-meta .bm-val { font-size: 22px; font-weight: 700; color: var(--text); line-height: 1; }
+.banner-meta .bm-lbl { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; }
+
+/* Metrics row */
+.metrics-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-bottom: 20px; }
+@media (max-width: 480px) { .metrics-row { grid-template-columns: 1fr; } }
+
+.metric-box {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 8px; padding: 14px 16px; text-align: center;
+}
+.metric-box .mv { font-size: 22px; font-weight: 700; color: var(--navy); line-height: 1; margin-bottom: 3px; }
+.metric-box .ml { font-size: 11px; color: var(--text2); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+
+/* Section label */
+.sec-lbl {
+  font-size: 10px; font-weight: 700; color: var(--text3);
+  text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 10px;
+}
+
+/* Per-image result cards */
+.img-cards { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-bottom: 20px; }
+@media (max-width: 620px) { .img-cards { grid-template-columns: 1fr; } }
+
+.img-card { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; background: #fff; }
+.img-card-top {
+  background: var(--navy-mid); padding: 7px 12px;
+  font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.9);
+  letter-spacing: 0.3px;
+}
+.img-card img { width: 100%; height: 100px; object-fit: cover; display: block; border-bottom: 1px solid var(--border); }
+.img-card-body { padding: 12px; }
+.img-card-verdict {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 10px; border-radius: 20px;
+  font-size: 11px; font-weight: 700; margin-bottom: 8px;
+}
+.img-card-verdict.pos { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-bdr); }
+.img-card-verdict.neg { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-bdr); }
+
+/* Confidence bar */
+.conf-row {
+  display: flex; align-items: center; gap: 7px;
+  margin-bottom: 8px;
+}
+.conf-lbl { font-size: 10px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.4px; min-width: 62px; }
+.conf-bar { flex: 1; height: 6px; background: var(--bg2); border-radius: 100px; overflow: hidden; }
+.conf-fill { height: 100%; border-radius: 100px; transition: width 0.9s ease; }
+.conf-fill.neg { background: var(--green); }
+.conf-fill.mod { background: var(--orange); }
+.conf-fill.pos { background: var(--red); }
+.conf-pct { font-size: 11px; font-weight: 700; min-width: 34px; text-align: right; }
+.conf-pct.neg { color: var(--green); }
+.conf-pct.mod { color: var(--orange); }
+.conf-pct.pos { color: var(--red); }
+
+.img-card-feature { font-size: 11px; color: var(--text2); margin-top: 4px; }
+
+/* ── MAJORITY VOTING ── */
+.voting-card {
+  border: 2px solid var(--navy);
+  border-radius: 10px; overflow: hidden; margin-bottom: 16px;
+}
+.voting-head {
+  background: var(--navy);
+  padding: 11px 18px; font-size: 13px; font-weight: 600; color: #fff;
+  display: flex; align-items: center; gap: 8px;
+}
+.voting-head-sub { font-size: 11px; color: rgba(255,255,255,0.6); font-weight: 400; margin-left: auto; }
+.voting-body { padding: 18px; background: #fff; }
+
+.vote-pills { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+.vote-pill {
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 14px; border-radius: 20px;
+  font-size: 12px; font-weight: 600; border: 1.5px solid transparent;
+}
+.vote-pill.neg  { background: var(--green-bg); border-color: var(--green-bdr); color: var(--green); }
+.vote-pill.pos  { background: var(--red-bg);   border-color: var(--red-bdr);   color: var(--red); }
+.vote-pill.winner { box-shadow: 0 0 0 2.5px var(--navy); }
+.vote-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.vote-pill.neg .vote-dot { background: var(--green); }
+.vote-pill.pos .vote-dot { background: var(--red); }
+.vote-count { background: rgba(0,0,0,0.07); border-radius: 10px; padding: 1px 7px; font-size: 11px; }
+
+.verdict-row {
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px 16px; border-radius: 8px; border-left: 4px solid transparent;
+}
+.verdict-row.non-anemia { background: var(--green-bg); border-color: var(--green); }
+.verdict-row.anemia     { background: var(--red-bg);   border-color: var(--red); }
+.verdict-icon { font-size: 24px; flex-shrink: 0; }
+.verdict-text h4 { font-size: 14px; font-weight: 700; margin-bottom: 3px; }
+.verdict-row.non-anemia h4 { color: var(--green); }
+.verdict-row.anemia h4     { color: var(--red); }
+.verdict-text p { font-size: 12px; color: var(--text2); line-height: 1.5; }
+.verdict-conf { margin-left: auto; text-align: right; flex-shrink: 0; }
+.verdict-conf .vnum { font-size: 22px; font-weight: 700; color: var(--text); line-height: 1; }
+.verdict-conf .vlbl { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; }
+
+/* ── SUGGESTIONS ── */
+.sug-list { list-style: none; }
+.sug-list li {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 12px 0; border-bottom: 1px solid var(--bg2);
+  font-size: 13px; color: var(--text); line-height: 1.6;
+}
+.sug-list li:last-child { border-bottom: none; }
+.sug-icon {
+  width: 30px; height: 30px; border-radius: 7px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; flex-shrink: 0; margin-top: 1px;
+}
+.sug-icon.green  { background: var(--green-bg); }
+.sug-icon.blue   { background: #dbeafe; }
+.sug-icon.orange { background: var(--orange-bg); }
+.sug-icon.red    { background: var(--red-bg); }
+.sug-icon.purple { background: #ede9fe; }
+
+/* ── DISCLAIMER ── */
+.disclaimer {
+  background: #fff8e1; border: 1px solid #ffe082;
+  border-left: 4px solid #f59e0b;
+  border-radius: 8px; padding: 12px 16px;
+  font-size: 12px; color: #78350f; line-height: 1.7; margin-top: 16px;
+}
+.disclaimer strong { font-weight: 600; }
+.result-actions {
+  margin-top: 18px;
+  display: flex;
+  justify-content: center;
+}
+
+/* ── WARNING BANNER (model not trained) ── */
+.warn-banner {
+  display: none;
+  background: var(--orange-bg); border: 1px solid var(--orange-bdr);
+  border-left: 4px solid var(--orange);
+  border-radius: 8px; padding: 10px 14px;
+  font-size: 12px; color: var(--orange); margin-bottom: 14px;
+  align-items: center; gap: 8px;
+}
+.warn-banner.show { display: flex; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="header-inner">
+    <div class="logo">
+      <div class="logo-mark">🩺</div>
+      <div class="logo-name">AnemAI <span>Detection System</span></div>
+    </div>
+    <div class="header-nav">
+      <a href="#">About</a>
+      <a href="#">Documentation</a>
+      <a href="#">Research</a>
+      <div class="header-pill">v1.0 Beta</div>
+    </div>
+  </div>
+</header>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-inner">
+    <h1>Anemia Detection System</h1>
+    <p>Upload three separate images — fingernail, conjunctiva (inner eyelid), and a palm/finger close-up. Each image is analysed independently for pallor features using a trained EfficientNet-B0 model. Majority voting determines the final diagnosis.</p>
+    <div class="hero-badges">
+      <div class="hero-badge">🤖 <EfficientNet-B3></EfficientNet-B3> Model</div>
+      <div class="hero-badge">🗳️ Majority Voting</div>
+      <div class="hero-badge">🔬 3-Feature Analysis</div>
+      <div class="hero-badge">⚡ Real-time Results</div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE -->
+<div class="page">
+
+  <!-- NOT TRAINED WARNING -->
+  <div class="warn-banner" id="warn-banner">
+    ⚠️ <span>Model is running on pretrained ImageNet weights (not fine-tuned). Run <strong>train.py</strong> first for accurate anemia detection.</span>
+  </div>
+
+  <!-- STEP 1: PATIENT DETAILS -->
+  <div class="card">
+    <div class="card-header">
+      <div class="step-num">1</div>
+      Patient Details
+    </div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label for="patient-age">Age</label>
+        <input type="number" id="patient-age" min="0" max="120" placeholder="e.g. 25" required>
+      </div>
+      <div class="form-group">
+        <label for="patient-age-unit">Age Unit</label>
+        <select id="patient-age-unit">
+          <option value="years">Years</option>
+          <option value="days">Days (Newborns)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="patient-gender">Gender</label>
+        <select id="patient-gender">
+          <option value="Female">Female</option>
+          <option value="Male">Male</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 2: UPLOAD -->
+  <div class="card">
+    <div class="card-header">
+      <div class="step-num">2</div>
+      Upload Three Images
+    </div>
+
+    <div class="slots-grid">
+
+      <!-- NAIL -->
+      <div class="slot" id="slot-nail">
+        <div class="slot-top">
+          <span class="slot-label">Image 1 — Fingernail</span>
+          <span class="slot-badge" id="badge-nail">Empty</span>
+        </div>
+        <div class="slot-type">
+          <label>Feature Type</label>
+          <select disabled>
+            <option>Nail Bed Pallor</option>
+          </select>
+        </div>
+        <div class="drop-zone" id="drop-nail">
+          <input type="file" accept=".jpg,.jpeg,.jpe,.jfif,.png,.webp,.bmp,.gif,.tif,.tiff,.heic,.heif,.avif,image/jpeg,image/png,image/webp,image/gif,image/bmp,image/heic,image/heif,image/avif" onchange="handleFile(this,'nail')">
+          <div class="dz-icon-wrap">💅</div>
+          <div class="dz-text">Click or drag here</div>
+          <div class="dz-hint">JPG · JFIF · PNG · WEBP · AVIF · HEIC</div>
+        </div>
+        <div class="preview-box" id="preview-wrap-nail">
+          <img id="preview-nail" src="" alt="">
+          <button class="preview-remove" onclick="removeFile('nail')">✕</button>
+        </div>
+        <div class="slot-foot">
+          <div class="slot-foot-dot"></div>
+          <span id="foot-nail">No file selected</span>
+        </div>
+      </div>
+
+      <!-- EYE -->
+      <div class="slot" id="slot-eye">
+        <div class="slot-top">
+          <span class="slot-label">Image 2 — Conjunctiva</span>
+          <span class="slot-badge" id="badge-eye">Empty</span>
+        </div>
+        <div class="slot-type">
+          <label>Feature Type</label>
+          <select disabled>
+            <option>Inner Eyelid Pallor</option>
+          </select>
+        </div>
+        <div class="drop-zone" id="drop-eye">
+          <input type="file" accept=".jpg,.jpeg,.jpe,.jfif,.png,.webp,.bmp,.gif,.tif,.tiff,.heic,.heif,.avif,image/jpeg,image/png,image/webp,image/gif,image/bmp,image/heic,image/heif,image/avif" onchange="handleFile(this,'eye')">
+          <div class="dz-icon-wrap">👁️</div>
+          <div class="dz-text">Click or drag here</div>
+          <div class="dz-hint">JPG · JFIF · PNG · WEBP · AVIF · HEIC</div>
+        </div>
+        <div class="preview-box" id="preview-wrap-eye">
+          <img id="preview-eye" src="" alt="">
+          <button class="preview-remove" onclick="removeFile('eye')">✕</button>
+        </div>
+        <div class="slot-foot">
+          <div class="slot-foot-dot"></div>
+          <span id="foot-eye">No file selected</span>
+        </div>
+      </div>
+
+      <!-- PALM -->
+      <div class="slot" id="slot-palm">
+        <div class="slot-top">
+          <span class="slot-label">Image 3 — Palm / Finger</span>
+          <span class="slot-badge" id="badge-palm">Empty</span>
+        </div>
+        <div class="slot-type">
+          <label>Feature Type</label>
+          <select disabled>
+            <option>Skin Tone Pallor</option>
+          </select>
+        </div>
+        <div class="drop-zone" id="drop-palm">
+          <input type="file" accept=".jpg,.jpeg,.jpe,.jfif,.png,.webp,.bmp,.gif,.tif,.tiff,.heic,.heif,.avif,image/jpeg,image/png,image/webp,image/gif,image/bmp,image/heic,image/heif,image/avif" onchange="handleFile(this,'palm')">
+          <div class="dz-icon-wrap">🤚</div>
+          <div class="dz-text">Click or drag here</div>
+          <div class="dz-hint">JPG · JFIF · PNG · WEBP · AVIF · HEIC</div>
+        </div>
+        <div class="preview-box" id="preview-wrap-palm">
+          <img id="preview-palm" src="" alt="">
+          <button class="preview-remove" onclick="removeFile('palm')">✕</button>
+        </div>
+        <div class="slot-foot">
+          <div class="slot-foot-dot"></div>
+          <span id="foot-palm">No file selected</span>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="info-box">
+      <h4>📋 Photo Guidelines</h4>
+      <div class="info-cols">
+        <div class="info-item">Fingernail: remove nail polish, use bright white light</div>
+        <div class="info-item">Conjunctiva: gently pull lower eyelid down, look upward</div>
+        <div class="info-item">Palm: photograph inner palm under good lighting</div>
+        <div class="info-item">Avoid shadows, blur, or reflections on skin surface</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 3: ANALYZE -->
+  <div class="card">
+    <div class="card-header">
+      <div class="step-num">3</div>
+      Run Analysis
+    </div>
+    <div class="action-row">
+      <button class="btn-primary" id="analyze-btn" onclick="analyze()" disabled>
+        <div class="spinner"></div>
+        <span class="btn-lbl">🔬 Analyze Images</span>
+      </button>
+      <div class="count-text" id="count-text">Upload all three images to continue.</div>
+    </div>
+    <div class="status-bar" id="status-bar"></div>
+  </div>
+
+  <!-- RESULTS -->
+  <div id="results">
+
+    <div class="card">
+      <div class="card-header">
+        <div class="step-num">4</div>
+        Analysis Results
+      </div>
+
+      <!-- Overall verdict banner -->
+      <div class="result-banner" id="result-banner">
+        <div class="banner-icon" id="banner-icon">🔬</div>
+        <div class="banner-text">
+          <h3 id="banner-heading">—</h3>
+          <p id="banner-sub">—</p>
+        </div>
+        <div class="banner-meta">
+          <div class="bm-val" id="banner-hb">—</div>
+          <div class="bm-lbl">Est. Haemoglobin (g/dL)</div>
+        </div>
+      </div>
+
+      <!-- Key metrics -->
+      <div class="metrics-row" style="grid-template-columns: repeat(4, 1fr);">
+        <div class="metric-box">
+          <div class="mv" id="met-agecat" style="font-size:16px;">—</div>
+          <div class="ml">Age Category</div>
+        </div>
+        <div class="metric-box">
+          <div class="mv" id="met-severity">—</div>
+          <div class="ml">Severity</div>
+        </div>
+        <div class="metric-box">
+          <div class="mv" id="met-pallor">—</div>
+          <div class="ml">Pallor Score</div>
+        </div>
+        <div class="metric-box">
+          <div class="mv" id="met-votes">—</div>
+          <div class="ml">Anemia Votes</div>
+        </div>
+      </div>
+
+      <!-- Per-image breakdown -->
+      <div class="sec-lbl">Per-Image Breakdown &amp; Confidence Scores</div>
+      <div class="img-cards" id="img-cards"></div>
+
+    </div>
+
+    <!-- MAJORITY VOTING -->
+    <div class="voting-card">
+      <div class="voting-head">
+        🗳️ Final Verdict — Majority Voting
+        <span class="voting-head-sub">2 of 3 votes required for diagnosis</span>
+      </div>
+      <div class="voting-body">
+        <div class="vote-pills" id="vote-pills"></div>
+        <div class="verdict-row" id="verdict-row">
+          <div class="verdict-icon" id="verdict-icon">—</div>
+          <div class="verdict-text">
+            <h4 id="verdict-heading">—</h4>
+            <p id="verdict-sub">—</p>
+          </div>
+          <div class="verdict-conf">
+            <div class="vnum" id="verdict-avg">—</div>
+            <div class="vlbl">Avg. Confidence</div>
+          </div>
+        </div>
+        <p id="final-majority-text" style="margin-top:10px;font-size:13px;font-weight:600;color:var(--navy);">
+          Final Prediction (Majority Voting): —
+        </p>
+      </div>
+    </div>
+
+    <!-- HEALTH SUGGESTIONS -->
+    <div class="card">
+      <div class="card-header">
+        <div class="step-num">5</div>
+        Health Suggestions
+      </div>
+      <ul class="sug-list" id="sug-list"></ul>
+    </div>
+
+    <div class="result-actions">
+      <button class="btn-refresh" onclick="analyzeNewImages()">
+        🔄 Refresh / Analyze New Images
+      </button>
+    </div>
+
+  </div><!-- /results -->
+</div><!-- /page -->
+
+<script>
+// 🔥 ONLY CHANGES APPLIED - FULL SAFE VERSION
+
+const files = { nail: null, eye: null, palm: null };
+
+/** Only raster photo uploads — blocks PDF, SVG (non-photo), random docs. HEIC allowed by extension. */
+function isPhotoFile(file) {
+  if (!file) return false;
+  const name = (file.name || '').toLowerCase();
+  const t = (file.type || '').toLowerCase();
+  if (t === 'image/svg+xml') return false;
+  const blockedExt = /\.(pdf|doc|docx|zip|rar|exe|txt|csv|mp4|mov|mkv|lnk)$/i;
+  if (blockedExt.test(file.name || '')) return false;
+  if (t.startsWith('image/') && t !== 'image/svg+xml') return true;
+  return /\.(jpe?g|jfif|jpe|png|webp|gif|bmp|heic|heif|avif|tiff?)$/i.test(name);
+}
+
+function handleFile(input, key) {
+  const file = input.files[0];
+  if (!file) return;
+  if (!isPhotoFile(file)) {
+    setStatus('Sirf photo files (JPG/JFIF, PNG, WEBP, AVIF, HEIC, …). PDF/video mat daalo.', 'error');
+    if (input.value !== undefined) input.value = '';
+    return;
+  }
+  files[key] = file;
+
+  const url = URL.createObjectURL(file);
+  document.getElementById('preview-' + key).src = url;
+  document.getElementById('slot-' + key).classList.add('has-image');
+  document.getElementById('badge-' + key).textContent = 'Ready';
+  document.getElementById('badge-' + key).classList.add('ready');
+  document.getElementById('foot-' + key).textContent = file.name;
+
+  refreshUI();
+}
+
+function removeFile(key) {
+  files[key] = null;
+  document.getElementById('preview-' + key).src = '';
+  document.getElementById('slot-' + key).classList.remove('has-image');
+  document.getElementById('badge-' + key).textContent = 'Empty';
+  document.getElementById('badge-' + key).classList.remove('ready');
+  document.getElementById('foot-' + key).textContent = 'No file selected';
+  document.getElementById('drop-' + key).querySelector('input').value = '';
+
+  refreshUI();
+}
+
+// Drag & Drop
+['nail','eye','palm'].forEach(key => {
+  const zone = document.getElementById('drop-' + key);
+
+  zone.addEventListener('dragover', e => {
+    e.preventDefault();
+    zone.classList.add('over');
+  });
+
+  zone.addEventListener('dragleave', () => zone.classList.remove('over'));
+
+  zone.addEventListener('drop', e => {
+    e.preventDefault();
+    zone.classList.remove('over');
+    const f = e.dataTransfer.files[0];
+    if (!f) return;
+    if (!isPhotoFile(f)) {
+      setStatus('Sirf photo files chalegi (JPG, PNG, WEBP, HEIC, …). Ye file allow nahi hai.', 'error');
+      return;
+    }
+    handleFile({ files: [f] }, key);
+  });
+});
+
+function refreshUI() {
+  const count = Object.values(files).filter(Boolean).length;
+  const btn = document.getElementById('analyze-btn');
+  const txt = document.getElementById('count-text');
+  
+  const age = document.getElementById('patient-age').value;
+  const ageValid = age && age >= 0;
+
+  btn.disabled = count < 3 || !ageValid;
+
+  if (!ageValid)
+    txt.innerHTML = 'Enter patient age to continue.';
+  else if (count === 0)
+    txt.innerHTML = 'Upload all three images to continue.';
+  else if (count < 3)
+    txt.innerHTML = `<strong>${count}/3</strong> images uploaded — need all three.`;
+  else
+    txt.innerHTML = `<strong>3/3</strong> images ready. Click Analyze to proceed.`;
+}
+
+// Attach listeners to form inputs to refresh UI
+document.getElementById('patient-age').addEventListener('input', refreshUI);
+
+function setStatus(msg, type) {
+  const el = document.getElementById('status-bar');
+  el.className = 'status-bar ' + (type || '');
+  el.textContent = msg;
+  el.style.display = msg ? 'flex' : 'none';
+}
+
+async function analyze() {
+  const btn = document.getElementById('analyze-btn');
+
+  btn.classList.add('loading');
+  btn.disabled = true;
+  document.querySelector('.btn-lbl').innerText = "Analyzing...";
+
+  document.getElementById('results').style.display = 'none';
+  setStatus('Sending images to model for analysis...', 'info');
+
+  try {
+    const formData = new FormData();
+    formData.append('nail', files.nail);
+    formData.append('eye', files.eye);
+    formData.append('palm', files.palm);
+    
+    // Append Patient Details
+    formData.append('age', document.getElementById('patient-age').value);
+    formData.append('age_unit', document.getElementById('patient-age-unit').value);
+    formData.append('gender', document.getElementById('patient-gender').value);
+
+    const res = await fetch('http://localhost:5000/predict', {
+      method: 'POST',
+      body: formData
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Server error");
+
+    renderResults(data);
+    setStatus('', '');
+
+  } catch (err) {
+    const msg = err.message || String(err);
+    const netFail = /fetch|network|failed to load|load failed|localhost/i.test(msg);
+    setStatus('Error: ' + msg + (netFail ? ' — Make sure app.py is running.' : ''), 'error');
+  } finally {
+    btn.classList.remove('loading');
+    document.querySelector('.btn-lbl').innerText = "🔬 Analyze Images";
+    refreshUI();
+  }
+}
+
+function renderResults(data) {
+  const warn = document.getElementById('warn-banner');
+
+  if (!data.model_trained) warn.classList.add('show');
+  else warn.classList.remove('show');
+  /* 
+    To improve accuracy, give user input-driven suggestions for better image uploads,
+    and display model limitations and next steps transparently.
+    These UI/UX steps will improve "accuracy in use" and reduce GIGO (garbage-in-garbage-out).
+
+    For actual ML accuracy lift, you should: 
+      - Use more and higher-quality images for training (expand/curate dataset).
+      - Apply advanced augmentations in training (color jitter, random crops, mixup, etc).
+      - Try a more powerful model (e.g., EfficientNet-B3, B5 etc).
+      - Add ensemble of models for hard cases.
+      - Regularize appropriately (avoid overfitting).
+      - Collect more diverse clinical images, label with expert consensus.
+      - Validate with external datasets.
+
+    (These changes are for backend/train.py, not this HTML.)
+    See README "Step 3-5" and ensure you're using the best weights, retrain if needed.
+    UI below will guide the user for highest confidence ML outputs.
+  */
+
+  // UI Suggestion: Warn user if confidence is low — encourage re-upload
+  if (data.metrics && data.metrics.pallor_score) {
+    const scoreVal = parseFloat(data.metrics.pallor_score.replace('%',''));
+    if (scoreVal < 60) {
+      setTimeout(() => {
+        setStatus(
+          '⚠️ Model confidence is low. For best accuracy, ensure all images are clear, well-lit, focus on the correct region, and re-upload if doubtful.',
+          'warn'
+        );
+      }, 700);
+    }
+  }
+
+  // UI Suggestion: Point to model limitations for transparency
+  if (data.hasOwnProperty("model_trained") && data.model_trained && data.metrics && data.metrics.hasOwnProperty('limitations') && data.metrics.limitations) {
+    // Backend can return a "limitations" string in "metrics" to show if known
+    setTimeout(() => {
+      setStatus('Note: ' + data.metrics.limitations, 'info');
+    }, 300);
+  }
+
+  // You may also add UI controls here for advanced users:
+  //   - e.g., show "Upload more images for even better accuracy" if available
+  //   - e.g., show "Try beta model" if secondary model endpoints deployed
+
+  const features = data.features || [];
+  const voteInfo = data.majority_vote || {};
+  const isAnemia = !!voteInfo.is_anemia;
+  const score = Number(data.metrics?.pallor_score?.replace('%','') || 0);
+
+  const confidenceLabel =
+    score > 75 ? "High" :
+    score > 50 ? "Medium" : "Low";
+
+  const avgConf = score.toFixed(1);
+
+  // Banner
+  const banner = document.getElementById('result-banner');
+  banner.className = 'result-banner ' + (isAnemia ? 'anemia' : 'non-anemia');
+
+  document.getElementById('banner-icon').textContent = isAnemia ? '🔴' : '✅';
+  document.getElementById('banner-heading').textContent =
+    isAnemia ? "Anemic" : "Normal";
+  document.getElementById('banner-sub').textContent =
+    `Final Prediction (Majority Voting): ${voteInfo.final_prediction || "—"}`;
+  document.getElementById('banner-hb').textContent = data.metrics?.haemoglobin || "—";
+
+  document.getElementById('met-votes').textContent =
+    data.majority_vote
+      ? `${data.majority_vote.anemia_votes} / ${data.majority_vote.total_votes}`
+      : "—";
+
+  document.getElementById('met-agecat').textContent = data.patient_info?.age_category || "—";
+
+  document.getElementById('met-severity').textContent =
+    data.metrics?.severity || confidenceLabel;
+
+  document.getElementById('met-pallor').textContent =
+    data.metrics?.pallor_score || avgConf + "%";
+
+  // Individual image results
+  const imgCards = document.getElementById('img-cards');
+  imgCards.innerHTML = features.map(f => {
+    const conf = Math.min(100, Math.max(0, Number(f.confidence || 0)));
+    const state = f.is_anemia ? 'pos' : 'neg';
+    const confClass = conf >= 75 ? 'pos' : (conf >= 45 ? 'mod' : 'neg');
+    const sourceKey = (f.source || '').toLowerCase().includes('nail')
+      ? 'nail'
+      : ((f.source || '').toLowerCase().includes('conjunctiva') ? 'eye' : 'palm');
+    const imageUrl = files[sourceKey] ? URL.createObjectURL(files[sourceKey]) : '';
+    return `
+      <div class="img-card">
+        <div class="img-card-top">${f.source || 'Image'}</div>
+        ${imageUrl ? `<img src="${imageUrl}" alt="${f.source || 'Result image'}">` : ''}
+        <div class="img-card-body">
+          <div class="img-card-verdict ${state}">${f.prediction}</div>
+          <div class="conf-row">
+            <div class="conf-lbl">Confidence</div>
+            <div class="conf-bar"><div class="conf-fill ${confClass}" style="width:${conf}%;"></div></div>
+            <div class="conf-pct ${confClass}">${conf.toFixed(1)}%</div>
+          </div>
+          <div class="img-card-feature">${f.feature || ''}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  // Voting pills + final text
+  const votePills = document.getElementById('vote-pills');
+  const predictions = data.predictions || features.map(f => f.prediction);
+  votePills.innerHTML = predictions.map((p, idx) => {
+    const cls = p === "Anemic" ? "pos" : "neg";
+    return `<div class="vote-pill ${cls}"><span class="vote-dot"></span>Image ${idx + 1}: ${p}</div>`;
+  }).join('');
+
+  document.getElementById('final-majority-text').textContent =
+    data.final_result_text || `Final Prediction (Majority Voting): ${voteInfo.final_prediction || "—"}`;
+
+  document.getElementById('verdict-heading').textContent =
+    `Final Prediction (Majority Voting): ${voteInfo.final_prediction || "—"}`;
+  document.getElementById('verdict-sub').textContent =
+    voteInfo.rule_used === 'majority'
+      ? 'At least 2 out of 3 image predictions matched.'
+      : 'No majority match found; selected highest-confidence prediction.';
+  document.getElementById('verdict-icon').textContent = isAnemia ? '🔴' : '✅';
+  document.getElementById('verdict-avg').textContent = `${avgConf}%`;
+  document.getElementById('verdict-row').className = `verdict-row ${isAnemia ? 'anemia' : 'non-anemia'}`;
+
+  // Suggestions list (keep existing section functional)
+  const sugList = document.getElementById('sug-list');
+  const ageCat = data.patient_info?.age_category || "Adult";
+  const gender = data.patient_info?.gender || "Female";
+  
+  let specificAdvice = "";
+  if (ageCat === "Newborn (0-28 days)") {
+      specificAdvice = "Newborn hemoglobin levels vary rapidly. Ensure proper pediatric evaluation.";
+  } else if (ageCat === "Child (1-12 years)") {
+      specificAdvice = "Children need iron for growth. Ensure a diet rich in fortified cereals and greens.";
+  } else if (ageCat === "Teen/Adolescent (13-19 years)") {
+      if (gender === "Female") specificAdvice = "Teen girls are at higher risk due to menstruation. Monitor iron intake closely.";
+      else specificAdvice = "Teens undergo rapid growth; ensure balanced nutrition.";
+  } else if (ageCat === "Senior Citizen (60+ years)") {
+      specificAdvice = "Anemia in seniors can be linked to other chronic conditions. Thorough medical checkup is advised.";
+  }
+
+  sugList.innerHTML = isAnemia
+    ? `
+      <li><div class="sug-icon red">🩸</div><div>Result suggests possible anemia. Please consult a doctor for CBC testing.</div></li>
+      ${specificAdvice ? `<li><div class="sug-icon blue">ℹ️</div><div>${specificAdvice}</div></li>` : ''}
+      <li><div class="sug-icon orange">🥗</div><div>Increase iron-rich foods (spinach, beans, dates, lean meat) and vitamin C intake.</div></li>
+      <li><div class="sug-icon blue">📅</div><div>Retest with clear images and compare with medical reports.</div></li>
+    `
+    : `
+      <li><div class="sug-icon green">✅</div><div>No anemia pattern detected from current images.</div></li>
+      ${specificAdvice ? `<li><div class="sug-icon blue">ℹ️</div><div>${specificAdvice}</div></li>` : ''}
+      <li><div class="sug-icon blue">💧</div><div>Maintain hydration and balanced nutrition for healthy blood levels.</div></li>
+      <li><div class="sug-icon purple">🔁</div><div>Repeat the analysis if symptoms persist or image quality was poor.</div></li>
+    `;
+
+  document.getElementById('results').style.display = 'block';
+  document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+}
+
+function analyzeNewImages() {
+  location.reload();
+}
+</script>
+</body>
+</html>

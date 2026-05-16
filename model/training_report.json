@@ -1,0 +1,188 @@
+{
+  "mode": "UPGRADED_PRECISION_FOCUSED",
+  "runtime_seconds": 239.43,
+  "runtime_target_seconds": 900,
+  "classes": [
+    "anemia",
+    "non_anemia"
+  ],
+  "data_fraction": 1.0,
+  "image_size": [
+    128,
+    128
+  ],
+  "feature_type": "upgraded_color_texture_statistics_v2",
+  "feature_dimension": 117,
+  "samples_total_scanned": 8272,
+  "samples_used_for_training": 8272,
+  "invalid_images_skipped": 0,
+  "outliers_removed": 4,
+  "train_size": 6614,
+  "val_size": 1654,
+  "class_counts_after_cleaning": [
+    4226,
+    4042
+  ],
+  "baseline": {
+    "name": "Baseline (Logistic Regression)",
+    "train_accuracy": 0.7165,
+    "val_accuracy": 0.7237,
+    "overfit_gap": -0.0072,
+    "validation": {
+      "accuracy": 0.7237001209189843,
+      "confusion_matrix": [
+        [
+          591,
+          254
+        ],
+        [
+          203,
+          606
+        ]
+      ],
+      "report": {
+        "anemia": {
+          "precision": 0.7443324937027708,
+          "recall": 0.6994082840236686,
+          "f1-score": 0.7211714460036608,
+          "support": 845.0
+        },
+        "non_anemia": {
+          "precision": 0.7046511627906977,
+          "recall": 0.7490729295426453,
+          "f1-score": 0.7261833433193529,
+          "support": 809.0
+        },
+        "accuracy": 0.7237001209189843,
+        "macro avg": {
+          "precision": 0.7244918282467343,
+          "recall": 0.7242406067831569,
+          "f1-score": 0.7236773946615068,
+          "support": 1654.0
+        },
+        "weighted avg": {
+          "precision": 0.724923668607325,
+          "recall": 0.7237001209189843,
+          "f1-score": 0.723622851643561,
+          "support": 1654.0
+        }
+      },
+      "false_positives_non_anemia_as_anemia": 203,
+      "false_negatives_anemia_as_non_anemia": 254
+    }
+  },
+  "after_random_forest": {
+    "name": "Tuned XGBoost",
+    "train_accuracy": 0.9988,
+    "val_accuracy": 0.9897,
+    "overfit_gap": 0.0091,
+    "best_params": {
+      "subsample": 0.7,
+      "reg_lambda": 5.0,
+      "reg_alpha": 1.0,
+      "n_estimators": 200,
+      "max_depth": 5,
+      "learning_rate": 0.1,
+      "gamma": 0.1,
+      "colsample_bytree": 0.7
+    },
+    "search_iterations": 25,
+    "cv_folds": 5,
+    "cv_scoring": "fbeta_beta_0.5_non_anemia",
+    "validation_default_threshold": {
+      "accuracy": 0.9897218863361548,
+      "confusion_matrix": [
+        [
+          839,
+          6
+        ],
+        [
+          11,
+          798
+        ]
+      ],
+      "report": {
+        "anemia": {
+          "precision": 0.9870588235294118,
+          "recall": 0.9928994082840237,
+          "f1-score": 0.9899705014749263,
+          "support": 845.0
+        },
+        "non_anemia": {
+          "precision": 0.9925373134328358,
+          "recall": 0.9864029666254636,
+          "f1-score": 0.9894606323620583,
+          "support": 809.0
+        },
+        "accuracy": 0.9897218863361548,
+        "macro avg": {
+          "precision": 0.9897980684811238,
+          "recall": 0.9896511874547436,
+          "f1-score": 0.9897155669184923,
+          "support": 1654.0
+        },
+        "weighted avg": {
+          "precision": 0.9897384476720177,
+          "recall": 0.9897218863361548,
+          "f1-score": 0.9897211156754643,
+          "support": 1654.0
+        }
+      },
+      "false_positives_non_anemia_as_anemia": 11,
+      "false_negatives_anemia_as_non_anemia": 6
+    }
+  },
+  "selected_threshold": {
+    "anemia_probability_threshold": 0.375,
+    "selection_rule": 0.992908,
+    "validation_metrics": {
+      "accuracy": 0.9885126964933495,
+      "confusion_matrix": [
+        [
+          843,
+          2
+        ],
+        [
+          17,
+          792
+        ]
+      ],
+      "report": {
+        "anemia": {
+          "precision": 0.9802325581395349,
+          "recall": 0.9976331360946745,
+          "f1-score": 0.9888563049853373,
+          "support": 845.0
+        },
+        "non_anemia": {
+          "precision": 0.9974811083123426,
+          "recall": 0.9789864029666254,
+          "f1-score": 0.9881472239550843,
+          "support": 809.0
+        },
+        "accuracy": 0.9885126964933495,
+        "macro avg": {
+          "precision": 0.9888568332259388,
+          "recall": 0.98830976953065,
+          "f1-score": 0.9885017644702108,
+          "support": 1654.0
+        },
+        "weighted avg": {
+          "precision": 0.9886691222808901,
+          "recall": 0.9885126964933495,
+          "f1-score": 0.9885094811924263,
+          "support": 1654.0
+        }
+      },
+      "false_positives_non_anemia_as_anemia": 17,
+      "false_negatives_anemia_as_non_anemia": 2
+    }
+  },
+  "comparison": {
+    "before_val_accuracy": 0.7237,
+    "after_val_accuracy": 0.9897,
+    "improvement": 0.266,
+    "validation_false_positives_default": 11,
+    "validation_false_positives_thresholded": 17
+  }
+}
