@@ -1,5 +1,4 @@
-"""
-Patient-Aware Train-Test Split with No Data Leakage
+"""Patient-Aware Train-Test Split with No Data Leakage
 =====================================================
 
 CRITICAL: This prevents the same patient from appearing in both train and test sets.
@@ -22,36 +21,17 @@ from pathlib import Path
 from typing import Dict, List, Tuple
 
 def extract_patient_id(filename: str) -> str:
-    """
-    Extract patient ID from filename, handling various naming conventions.
-    
-    Expected formats:
-    - patient_001_nail.jpg
-    - patient_001_nail_aug_1.jpg
-    - P001_eye.png
-    - PATIENT_ABC_palm_aug_2.jpg
-    """
+    """Extract patient ID from filename, handling various naming conventions."""
     base = os.path.splitext(filename)[0]
     
-    # Remove augmentation suffix
     if "_aug" in base:
         base = base.split("_aug")[0]
     
-    # Remove body part suffixes
     for suffix in ['_nail', '_eye', '_palm', '_fingernail', '_conjunctiva', '_conjuctiva']:
         if base.endswith(suffix):
             base = base[:-len(suffix)]
     
     return base.strip()
-
-def count_images_by_class(source_dir: str) -> Dict[str, int]:
-    """Count images in each class folder."""
-    counts = {}
-    for class_name in ["anemia", "non_anemia"]:
-        class_dir = os.path.join(source_dir, class_name)
-        if os.path.isdir(class_dir):
-            counts[class_name] = len([f for f in os.listdir(class_dir) if os.path.isfile(os.path.join(class_dir, f))])
-    return counts
 
 def patient_aware_split(
     source_dir: str = "data",
@@ -59,20 +39,18 @@ def patient_aware_split(
     train_ratio: float = 0.70,
     val_ratio: float = 0.15,
     test_ratio: float = 0.15,
-    seed: int = 42,
-    stratified: bool = True
+    seed: int = 42
 ) -> Dict:
     """
-    Split dataset by patient ID with optional stratification.
+    Split dataset by patient ID with NO data leakage.
     
     Args:
         source_dir: Directory containing 'anemia' and 'non_anemia' folders
         dest_dir: Output directory for split data
-        train_ratio: Proportion for training (0.70 = 70%)
-        val_ratio: Proportion for validation (0.15 = 15%)
-        test_ratio: Proportion for testing (0.15 = 15%)
+        train_ratio: Proportion for training (default 70%)
+        val_ratio: Proportion for validation (default 15%)
+        test_ratio: Proportion for testing (default 15%)
         seed: Random seed for reproducibility
-        stratified: If True, maintain class balance in splits
     
     Returns:
         Dictionary with split statistics
@@ -80,7 +58,6 @@ def patient_aware_split(
     
     random.seed(seed)
     
-    # Ensure ratios sum to 1.0
     total_ratio = train_ratio + val_ratio + test_ratio
     if abs(total_ratio - 1.0) > 0.01:
         raise ValueError(f"Ratios must sum to 1.0, got {total_ratio}")
@@ -148,7 +125,7 @@ def patient_aware_split(
         for split in ["train", "val", "test"]:
             os.makedirs(os.path.join(dest_dir, split, class_name), exist_ok=True)
         
-        # Step 6: Copy files to destination
+        # Step 6: Copy files
         for fname in train_files:
             src = os.path.join(source_class_dir, fname)
             dst = os.path.join(dest_dir, "train", class_name, fname)
@@ -181,19 +158,13 @@ def patient_aware_split(
         if overlap_train_val or overlap_train_test or overlap_val_test:
             split_summary["validation"].append({
                 "class": class_name,
-                "status": "❌ FAILED - Patient overlap detected!",
-                "overlap_train_val": len(overlap_train_val),
-                "overlap_train_test": len(overlap_train_test),
-                "overlap_val_test": len(overlap_val_test)
+                "status": "❌ FAILED - Patient overlap detected!"
             })
             print(f"  ❌ ERROR: Patient overlap detected!")
         else:
             split_summary["validation"].append({
                 "class": class_name,
-                "status": "✅ PASS - No patient overlap",
-                "overlap_train_val": 0,
-                "overlap_train_test": 0,
-                "overlap_val_test": 0
+                "status": "✅ PASS - No patient overlap"
             })
             print(f"  ✅ No patient overlap (safe split)")
     
@@ -207,19 +178,12 @@ def patient_aware_split(
         total_patients = split_summary["patients"][split]["anemia"] + split_summary["patients"][split]["non_anemia"]
         
         print(f"\n[{split.upper()}]")
-        print(f"  Patients:  {total_patients}")
-        print(f"    Anemia:     {split_summary['patients'][split]['anemia']}")
-        print(f"    Non-anemia: {split_summary['patients'][split]['non_anemia']}")
-        print(f"  Images:    {total_images}")
-        print(f"    Anemia:     {split_summary[split]['anemia']}")
-        print(f"    Non-anemia: {split_summary[split]['non_anemia']}")
-        
-        # Calculate class balance
+        print(f"  Patients: {total_patients}")
+        print(f"  Images: {total_images}")
         if total_images > 0:
-            anemia_pct = 100 * split_summary[split]['anemia'] / total_images
+            anemia_pct = 100 * split_summary[split]["anemia"] / total_images
             print(f"  Class balance: {anemia_pct:.1f}% anemia, {100-anemia_pct:.1f}% normal")
     
-    # Verify no leakage
     print("\n" + "="*80)
     print("LEAKAGE VERIFICATION")
     print("="*80)
@@ -227,13 +191,7 @@ def patient_aware_split(
     all_valid = all(v["status"].startswith("✅") for v in split_summary["validation"])
     
     for validation in split_summary["validation"]:
-        print(f"\n{validation['class'].upper()}: {validation['status']}")
-        if validation['overlap_train_val'] > 0:
-            print(f"  ⚠️  Train-Val overlap: {validation['overlap_train_val']} patients")
-        if validation['overlap_train_test'] > 0:
-            print(f"  ⚠️  Train-Test overlap: {validation['overlap_train_test']} patients")
-        if validation['overlap_val_test'] > 0:
-            print(f"  ⚠️  Val-Test overlap: {validation['overlap_val_test']} patients")
+        print(f"  {validation['class'].upper()}: {validation['status']}")
     
     if all_valid:
         print("\n✅ ALL CHECKS PASSED - Dataset is properly split with NO LEAKAGE")
@@ -251,18 +209,15 @@ def patient_aware_split(
     return split_summary
 
 if __name__ == "__main__":
-    # Run with default settings
     result = patient_aware_split(
         source_dir="data",
         dest_dir="dataset_split",
         train_ratio=0.70,
         val_ratio=0.15,
         test_ratio=0.15,
-        seed=42,
-        stratified=True
+        seed=42
     )
     
     print("\n✅ Dataset split complete!")
-    print(f"   Train, validation, and test sets are properly separated by patient.")
-    print(f"   No patient appears in multiple sets.")
-    print(f"   Ready for training and evaluation!")
+    print("   Train, validation, and test sets are properly separated by patient.")
+    print("   No patient appears in multiple sets.")
